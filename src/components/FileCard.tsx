@@ -1,0 +1,142 @@
+import { Music, FileAudio, Play, Star } from 'lucide-react'
+import { Tag } from './Tag'
+import { Card } from './Card'
+import type { File } from '../types'
+
+interface FileCardProps {
+  file: File
+  selected?: boolean
+  onClick?: () => void
+  onDoubleClick?: () => void
+  onFavoriteToggle?: () => void
+}
+
+export function FileCard({
+  file,
+  selected = false,
+  onClick,
+  onDoubleClick,
+  onFavoriteToggle,
+}: FileCardProps) {
+  const formatDuration = (seconds?: number) => {
+    if (!seconds) return '--:--'
+    const mins = Math.floor(seconds / 60)
+    const secs = Math.floor(seconds % 60)
+    return `${mins}:${secs.toString().padStart(2, '0')}`
+  }
+
+  const formatFileSize = (bytes?: number) => {
+    if (!bytes) return '--'
+    const mb = bytes / 1024 / 1024
+    return mb < 1 ? `${(bytes / 1024).toFixed(0)} KB` : `${mb.toFixed(1)} MB`
+  }
+
+  return (
+    <Card selected={selected} onClick={onClick} className="group relative">
+      {/* Waveform Placeholder */}
+      <div className="h-16 bg-bg-primary rounded-lg mb-3 flex items-center justify-center overflow-hidden relative">
+        {/* Simple waveform bars placeholder */}
+        <div className="flex items-center gap-0.5 h-full">
+          {Array.from({ length: 40 }).map((_, i) => (
+            <div
+              key={i}
+              className="w-0.5 bg-accent-primary/30 rounded-full"
+              style={{
+                height: `${Math.random() * 100}%`,
+              }}
+            />
+          ))}
+        </div>
+
+        {/* Play button overlay (on hover) */}
+        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+          <button
+            className="w-10 h-10 rounded-full bg-accent-primary flex items-center justify-center hover:scale-110 transition-transform"
+            onClick={(e) => {
+              e.stopPropagation()
+              onDoubleClick?.()
+            }}
+          >
+            <Play size={18} className="text-black ml-0.5" fill="currentColor" />
+          </button>
+        </div>
+
+        {/* Favorite star */}
+        {file.is_favorite && (
+          <div className="absolute top-2 right-2">
+            <Star size={14} className="text-accent-warning" fill="currentColor" />
+          </div>
+        )}
+      </div>
+
+      {/* File Type Icon */}
+      <div className="flex items-center gap-2 mb-2">
+        <div className="w-8 h-8 rounded-lg bg-bg-secondary border border-bg-hover flex items-center justify-center">
+          {file.file_type === 'sample' ? (
+            <Music size={16} className="text-accent-secondary" />
+          ) : (
+            <FileAudio size={16} className="text-accent-tertiary" />
+          )}
+        </div>
+
+        <div className="flex-1 min-w-0">
+          <h3 className="text-sm font-medium text-text-primary truncate">
+            {file.filename}
+          </h3>
+        </div>
+      </div>
+
+      {/* Metadata */}
+      <div className="flex items-center gap-2 mb-2 text-xs">
+        {file.bpm && (
+          <span className="px-2 py-0.5 rounded bg-bpm-raw/15 border border-bpm-raw/30 text-bpm-raw font-mono font-semibold">
+            {Math.round(file.bpm)} BPM
+          </span>
+        )}
+        {file.detected_key && (
+          <span className="px-2 py-0.5 rounded bg-accent-secondary/15 border border-accent-secondary/30 text-accent-secondary font-semibold">
+            {file.detected_key}
+          </span>
+        )}
+        <span className="text-text-tertiary ml-auto">
+          {formatDuration(file.duration)}
+        </span>
+      </div>
+
+      {/* Tags */}
+      {file.tags && file.tags.length > 0 && (
+        <div className="flex flex-wrap gap-1 mb-2">
+          {file.tags.slice(0, 3).map((tag) => (
+            <Tag key={tag.id} color={tag.color} size="xs">
+              {tag.name}
+            </Tag>
+          ))}
+          {file.tags.length > 3 && (
+            <span className="text-xs text-text-tertiary">+{file.tags.length - 3}</span>
+          )}
+        </div>
+      )}
+
+      {/* Footer */}
+      <div className="flex items-center justify-between text-xs text-text-tertiary pt-2 border-t border-bg-hover">
+        <span>{formatFileSize(file.file_size)}</span>
+        {file.rating > 0 && (
+          <div className="flex items-center gap-0.5">
+            {Array.from({ length: file.rating }).map((_, i) => (
+              <Star key={i} size={10} className="text-accent-warning" fill="currentColor" />
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Selection Checkbox */}
+      {selected && (
+        <div className="absolute top-2 left-2 w-5 h-5 rounded bg-accent-primary flex items-center justify-center">
+          <svg className="w-3 h-3 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+          </svg>
+        </div>
+      )}
+    </Card>
+  )
+}
