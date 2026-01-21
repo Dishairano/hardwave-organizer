@@ -32,6 +32,8 @@ jobs:
           npx vite build
           npx electron-builder --win portable --x64
         timeout-minutes: 30
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build for Linux
         if: matrix.os == 'ubuntu-latest'
@@ -39,6 +41,8 @@ jobs:
           npx vite build
           npx electron-builder --linux AppImage --x64
         timeout-minutes: 30
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Upload Windows artifacts
         if: matrix.os == 'windows-latest'
