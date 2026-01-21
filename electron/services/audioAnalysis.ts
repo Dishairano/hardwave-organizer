@@ -1,6 +1,15 @@
-import { parseFile } from 'music-metadata'
 import type { IAudioMetadata } from 'music-metadata'
 import { updateFile } from '../database/queries'
+
+// Dynamic import for music-metadata (ES Module)
+let parseFile: any
+const loadMusicMetadata = async () => {
+  if (!parseFile) {
+    const mm = await import('music-metadata')
+    parseFile = mm.parseFile
+  }
+  return parseFile
+}
 
 export interface AudioMetadata {
   duration?: number
@@ -62,7 +71,8 @@ function estimateEnergyLevel(metadata: IAudioMetadata): number | undefined {
  */
 export async function analyzeAudioFile(filePath: string): Promise<AudioMetadata | null> {
   try {
-    const metadata = await parseFile(filePath, {
+    const parse = await loadMusicMetadata()
+    const metadata = await parse(filePath, {
       duration: true,
       skipCovers: true, // Don't parse album art for performance
     })
@@ -93,7 +103,8 @@ export async function analyzeAndUpdateFile(fileId: number, filePath: string): Pr
 
     if (!audioData) return false
 
-    const metadata = await parseFile(filePath, { duration: true, skipCovers: true })
+    const parse = await loadMusicMetadata()
+    const metadata = await parse(filePath, { duration: true, skipCovers: true })
     const energyLevel = estimateEnergyLevel(metadata)
 
     // Update file in database
@@ -150,7 +161,8 @@ export async function batchAnalyzeFiles(
  */
 export async function detectBPM(filePath: string): Promise<number | undefined> {
   try {
-    const metadata = await parseFile(filePath, { duration: false, skipCovers: true })
+    const parse = await loadMusicMetadata()
+    const metadata = await parse(filePath, { duration: false, skipCovers: true })
     return metadata.common.bpm
   } catch (error) {
     console.error(`Error detecting BPM for ${filePath}:`, error)

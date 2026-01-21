@@ -7,6 +7,19 @@ import type { File, Tag, Collection, SearchQuery, SearchResults } from '../../sr
 
 export function getAllFiles(limit = 100, offset = 0): File[] {
   const db = getDatabase()
+
+  // Verify table exists
+  try {
+    const tableCheck = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='files'").get()
+    if (!tableCheck) {
+      console.error('Files table does not exist! Re-initializing database...')
+      const { initDatabase } = require('./index')
+      initDatabase()
+    }
+  } catch (e) {
+    console.error('Error checking for files table:', e)
+  }
+
   const stmt = db.prepare(`
     SELECT * FROM files
     ORDER BY modified_at DESC
@@ -169,6 +182,19 @@ export function searchFiles(query: SearchQuery): SearchResults {
 
 export function getAllTags(): Tag[] {
   const db = getDatabase()
+
+  // Verify table exists
+  try {
+    const tableCheck = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='tags'").get()
+    if (!tableCheck) {
+      console.error('Tags table does not exist! Re-initializing database...')
+      const { initDatabase } = require('./index')
+      initDatabase()
+    }
+  } catch (e) {
+    console.error('Error checking for tags table:', e)
+  }
+
   const stmt = db.prepare('SELECT * FROM tags ORDER BY name ASC')
   return stmt.all() as Tag[]
 }

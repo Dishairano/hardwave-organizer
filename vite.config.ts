@@ -12,7 +12,10 @@ export default defineConfig({
         vite: {
           build: {
             rollupOptions: {
-              external: ['better-sqlite3', 'music-metadata', 'chokidar'],
+              external: ['better-sqlite3', 'music-metadata', 'chokidar', 'electron'],
+              output: {
+                format: 'es',
+              },
             },
           },
         },
