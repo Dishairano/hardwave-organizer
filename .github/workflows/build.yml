@@ -6,6 +6,9 @@ on:
       - 'v*'
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ${{ matrix.os }}
@@ -31,7 +34,7 @@ jobs:
         run: |
           find electron -name "*.d.ts" -type f -delete || true
           npx vite build
-          npx electron-builder --win portable --x64
+          npx electron-builder --win portable --x64 --publish never
         timeout-minutes: 30
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -41,7 +44,7 @@ jobs:
         run: |
           find electron -name "*.d.ts" -type f -delete || true
           npx vite build
-          npx electron-builder --linux AppImage --x64
+          npx electron-builder --linux AppImage --x64 --publish never
         timeout-minutes: 30
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
