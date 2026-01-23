@@ -1,9 +1,9 @@
 {
-  "name": "fl-studio-organizer",
-  "version": "0.1.6",
-  "description": "FL Studio Sample Organizer - Ultimate organization tool for harder-styles producers",
+  "name": "hardwave-organizer",
+  "version": "0.2.0",
+  "description": "Hardwave Organizer - Ultimate sample organization tool for harder-styles producers by Hardwave Studios",
   "main": "dist-electron/main.js",
-  "author": "Your Name",
+  "author": "Hardwave Studios",
   "license": "MIT",
   "private": true,
   "scripts": {
@@ -51,8 +51,8 @@
     "wait-on": "^7.2.0"
   },
   "build": {
-    "appId": "com.flstudioorganizer.app",
-    "productName": "FL Studio Organizer",
+    "appId": "com.hardwavestudios.organizer",
+    "productName": "Hardwave Organizer",
     "directories": {
       "output": "release/${version}"
     },

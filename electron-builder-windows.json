@@ -1,0 +1,26 @@
+{
+  "productName": "FL Studio Organizer",
+  "appId": "com.florganizer.app",
+  "directories": {
+    "output": "release/${version}"
+  },
+  "win": {
+    "target": ["portable"],
+    "icon": "build/icon.ico",
+    "artifactName": "${productName}-${version}-Windows.${ext}",
+    "sign": false
+  },
+  "portable": {
+    "artifactName": "${productName}-${version}-Windows-Portable.${ext}"
+  },
+  "extraResources": [
+    {
+      "from": "node_modules/better-sqlite3",
+      "to": "better-sqlite3",
+      "filter": ["**/*"]
+    }
+  ],
+  "asarUnpack": [
+    "node_modules/better-sqlite3/**/*"
+  ]
+}

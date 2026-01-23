@@ -1,10 +1,10 @@
-# FL Studio Organizer
+# Hardwave Organizer
 
-**Ultimate sample organization tool for harder-styles producers**
+**Part of the Hardwave Studios production suite - Ultimate sample organization for harder-styles producers**
 
 ![Platform](https://img.shields.io/badge/platform-Windows-blue)
-![Version](https://img.shields.io/badge/version-0.1.0-purple)
-![Status](https://img.shields.io/badge/status-in%20development-orange)
+![Version](https://img.shields.io/badge/version-0.2.0-purple)
+![Studio](https://img.shields.io/badge/Hardwave-Studios-ff00ff)
 
 ---
 
@@ -179,4 +179,19 @@ Beta testing opportunities coming soon!
 
 ---
 
-**Built for the harder-styles community** 🔥⚡
+---
+
+## 🌐 Hardwave Studios Suite
+
+**Hardwave Organizer** is the first product in the Hardwave Studios ecosystem:
+
+- **Hardwave Organizer** (Current) - Sample & project organization
+- **Hardwave Kickforge** (Coming Soon) - Harder-styles kick generator
+- **Hardwave Splice** (Coming Soon) - Splice integration
+- **Hardwave Intro Maker** (Coming Soon) - Extended intro generator
+
+Visit **[hardwavestudios.com](https://hardwavestudios.com)** for more info
+
+---
+
+**Built for the harder-styles community by Hardwave Studios** 🔥⚡
