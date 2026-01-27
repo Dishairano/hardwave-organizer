@@ -20,9 +20,11 @@ jobs:
 
       - name: Install dependencies
         run: npm install
+        working-directory: ./
 
       - name: Build Windows
         run: npm run build:win
+        working-directory: ./
         env:
           VITE_API_URL: ${{ secrets.VITE_API_URL }}
 
