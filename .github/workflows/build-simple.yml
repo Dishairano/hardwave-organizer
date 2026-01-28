@@ -30,7 +30,8 @@ jobs:
         continue-on-error: true
 
       - name: List release files
-        run: dir release /s /b
+        run: Get-ChildItem -Path release -Recurse -File
+        shell: pwsh
         
       - name: Upload to Release
         uses: softprops/action-gh-release@v1
