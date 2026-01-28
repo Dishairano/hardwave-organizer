@@ -56,7 +56,8 @@
     "appId": "com.hardwavestudios.suite",
     "productName": "Hardwave Studios Suite",
     "directories": {
-      "output": "release/${version}"
+      "output": "release/${version}",
+      "buildResources": "build"
     },
     "win": {
       "target": [
@@ -64,28 +65,32 @@
           "target": "nsis",
           "arch": ["x64"]
         }
-      ]
+      ],
+      "artifactName": "${productName}-${version}-Setup.${ext}"
     },
     "nsis": {
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "artifactName": "${productName}-${version}-Setup.${ext}"
+      "installerIcon": "build/icon.ico",
+      "uninstallerIcon": "build/icon.ico",
+      "license": "LICENSE"
     },
     "linux": {
       "target": ["AppImage"],
       "category": "Audio"
     },
+    "mac": {
+      "target": ["dmg"],
+      "category": "public.app-category.music"
+    },
     "files": [
       "dist/**/*",
       "dist-electron/**/*",
-      "package.json",
-      "node_modules/better-sqlite3/**/*",
-      "node_modules/music-metadata/**/*"
+      "package.json"
     ],
-    "asarUnpack": [
-      "node_modules/better-sqlite3/**/*"
-    ]
+    "extraResources": [],
+    "asar": true
   }
 }
