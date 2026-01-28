@@ -56,8 +56,7 @@
     "appId": "com.hardwavestudios.suite",
     "productName": "Hardwave Studios Suite",
     "directories": {
-      "output": "release/${version}",
-      "buildResources": "build"
+      "output": "release/${version}"
     },
     "win": {
       "target": [
@@ -72,10 +71,7 @@
       "oneClick": false,
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
-      "createStartMenuShortcut": true,
-      "installerIcon": "build/icon.ico",
-      "uninstallerIcon": "build/icon.ico",
-      "license": "LICENSE"
+      "createStartMenuShortcut": true
     },
     "linux": {
       "target": ["AppImage"],
