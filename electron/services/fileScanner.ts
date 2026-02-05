@@ -1,7 +1,7 @@
 import fs from 'fs'
 import path from 'path'
 import crypto from 'crypto'
-import { insertFile, updateFile } from '../database/queries'
+import { filesApi } from './api'
 import type { File } from '../../src/types'
 
 // Supported file extensions
@@ -222,7 +222,9 @@ export async function scanFolder(
     })
   }
 
-  // Process each file
+  // Collect all file data first
+  const filesToSync: any[] = []
+
   for (let i = 0; i < filesFound.length; i++) {
     const filePath = filesFound[i]
 
@@ -230,21 +232,13 @@ export async function scanFolder(
       const fileData = await scanFile(filePath)
 
       if (fileData) {
-        // Check for duplicates by hash
-        // TODO: Query database for existing hash
-        // For now, just insert
-
-        const fileId = insertFile(fileData)
-
         // Auto-tag if enabled
-        if (autoTag) {
-          const suggestedTags = autoTagFile(filePath)
-          // TODO: Add tags to file
-          console.log(`Auto-tags for ${fileData.filename}:`, suggestedTags)
-        }
+        const suggestedTags = autoTag ? autoTagFile(filePath) : []
 
-        result.indexed++
-        result.files.push({ id: fileId, ...fileData })
+        filesToSync.push({
+          ...fileData,
+          suggestedTags,
+        })
       }
 
       // Report progress
@@ -259,6 +253,36 @@ export async function scanFolder(
     } catch (error) {
       result.errors++
       console.error(`Error processing ${filePath}:`, error)
+    }
+  }
+
+  // Sync files to cloud API in batches
+  if (filesToSync.length > 0) {
+    try {
+      if (onProgress) {
+        onProgress({
+          total,
+          indexed: filesToSync.length,
+          status: 'analyzing',
+        })
+      }
+
+      // Sync in batches of 50
+      const batchSize = 50
+      for (let i = 0; i < filesToSync.length; i += batchSize) {
+        const batch = filesToSync.slice(i, i + batchSize)
+        const syncResult = await filesApi.sync(batch)
+
+        if (syncResult.results) {
+          for (const file of syncResult.results) {
+            result.files.push(file)
+          }
+          result.indexed += syncResult.results.length
+        }
+      }
+    } catch (error) {
+      console.error('Error syncing files to cloud:', error)
+      result.errors += filesToSync.length
     }
   }
 

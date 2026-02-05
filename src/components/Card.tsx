@@ -5,10 +5,11 @@ interface CardProps {
   children: ReactNode
   selected?: boolean
   onClick?: () => void
+  onContextMenu?: (e: React.MouseEvent) => void
   className?: string
 }
 
-export function Card({ children, selected = false, onClick, className }: CardProps) {
+export function Card({ children, selected = false, onClick, onContextMenu, className }: CardProps) {
   return (
     <div
       className={clsx(
@@ -21,6 +22,7 @@ export function Card({ children, selected = false, onClick, className }: CardPro
         className
       )}
       onClick={onClick}
+      onContextMenu={onContextMenu}
     >
       {children}
     </div>

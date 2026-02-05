@@ -1,4 +1,4 @@
-import { Music, FileAudio, Play, Star } from 'lucide-react'
+import { Music, FileAudio, Play, Pause, Star } from 'lucide-react'
 import { Tag } from './Tag'
 import { Card } from './Card'
 import type { File } from '../types'
@@ -6,17 +6,21 @@ import type { File } from '../types'
 interface FileCardProps {
   file: File
   selected?: boolean
+  isPlaying?: boolean
   onClick?: () => void
   onDoubleClick?: () => void
   onFavoriteToggle?: () => void
+  onContextMenu?: (e: React.MouseEvent) => void
 }
 
 export function FileCard({
   file,
   selected = false,
+  isPlaying = false,
   onClick,
   onDoubleClick,
   onFavoriteToggle,
+  onContextMenu,
 }: FileCardProps) {
   const formatDuration = (seconds?: number) => {
     if (!seconds) return '--:--'
@@ -31,8 +35,18 @@ export function FileCard({
     return mb < 1 ? `${(bytes / 1024).toFixed(0)} KB` : `${mb.toFixed(1)} MB`
   }
 
+  const handleContextMenu = (e: React.MouseEvent) => {
+    e.preventDefault()
+    onContextMenu?.(e)
+  }
+
   return (
-    <Card selected={selected} onClick={onClick} className="group relative">
+    <Card
+      selected={selected}
+      onClick={onClick}
+      className="group relative"
+      onContextMenu={handleContextMenu}
+    >
       {/* Waveform Placeholder */}
       <div className="h-16 bg-bg-primary rounded-lg mb-3 flex items-center justify-center overflow-hidden relative">
         {/* Simple waveform bars placeholder */}
@@ -48,31 +62,43 @@ export function FileCard({
           ))}
         </div>
 
-        {/* Play button overlay (on hover) */}
-        <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+        {/* Play button overlay (on hover or when playing) */}
+        <div className={`absolute inset-0 bg-black/50 transition-opacity flex items-center justify-center ${isPlaying ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`}>
           <button
-            className="w-10 h-10 rounded-full bg-accent-primary flex items-center justify-center hover:scale-110 transition-transform"
+            className={`w-10 h-10 rounded-full flex items-center justify-center hover:scale-110 transition-transform ${isPlaying ? 'bg-accent-warning' : 'bg-accent-primary'}`}
             onClick={(e) => {
               e.stopPropagation()
               onDoubleClick?.()
             }}
           >
-            <Play size={18} className="text-black ml-0.5" fill="currentColor" />
+            {isPlaying ? (
+              <Pause size={18} className="text-black" fill="currentColor" />
+            ) : (
+              <Play size={18} className="text-black ml-0.5" fill="currentColor" />
+            )}
           </button>
         </div>
 
-        {/* Favorite star */}
-        {file.is_favorite && (
-          <div className="absolute top-2 right-2">
-            <Star size={14} className="text-accent-warning" fill="currentColor" />
-          </div>
-        )}
+        {/* Favorite star button */}
+        <button
+          className={`absolute top-2 right-2 p-1 rounded transition-all ${
+            file.is_favorite
+              ? 'opacity-100 text-accent-warning'
+              : 'opacity-0 group-hover:opacity-100 text-white/70 hover:text-accent-warning'
+          }`}
+          onClick={(e) => {
+            e.stopPropagation()
+            onFavoriteToggle?.()
+          }}
+        >
+          <Star size={16} fill={file.is_favorite ? 'currentColor' : 'none'} />
+        </button>
       </div>
 
       {/* File Type Icon */}
       <div className="flex items-center gap-2 mb-2">
         <div className="w-8 h-8 rounded-lg bg-bg-secondary border border-bg-hover flex items-center justify-center">
-          {file.file_type === 'sample' ? (
+          {file.file_type === 'sample' || file.file_type === 'one_shot' || file.file_type === 'loop' ? (
             <Music size={16} className="text-accent-secondary" />
           ) : (
             <FileAudio size={16} className="text-accent-tertiary" />

@@ -8,6 +8,54 @@ contextBridge.exposeInMainWorld('electron', {
   getPlatform: () => ipcRenderer.invoke('app:getPlatform'),
   ping: () => ipcRenderer.invoke('ping'),
 
+  // Authentication
+  auth: {
+    login: (email: string, password: string) => ipcRenderer.invoke('auth:login', email, password),
+    logout: () => ipcRenderer.invoke('auth:logout'),
+    verify: () => ipcRenderer.invoke('auth:verify'),
+    getUser: () => ipcRenderer.invoke('auth:getUser'),
+    hasSubscription: () => ipcRenderer.invoke('auth:hasSubscription'),
+    openSubscribe: () => ipcRenderer.invoke('auth:openSubscribe'),
+  },
+
+  // Updates
+  updates: {
+    check: () => ipcRenderer.invoke('update:check'),
+    checkManual: () => ipcRenderer.invoke('update:checkManual'),
+    download: () => ipcRenderer.invoke('update:download'),
+    install: () => ipcRenderer.invoke('update:install'),
+    onChecking: (callback: () => void) => {
+      const subscription = () => callback()
+      ipcRenderer.on('update:checking', subscription)
+      return () => ipcRenderer.removeListener('update:checking', subscription)
+    },
+    onAvailable: (callback: (info: any) => void) => {
+      const subscription = (_: any, info: any) => callback(info)
+      ipcRenderer.on('update:available', subscription)
+      return () => ipcRenderer.removeListener('update:available', subscription)
+    },
+    onNotAvailable: (callback: () => void) => {
+      const subscription = () => callback()
+      ipcRenderer.on('update:not-available', subscription)
+      return () => ipcRenderer.removeListener('update:not-available', subscription)
+    },
+    onProgress: (callback: (progress: any) => void) => {
+      const subscription = (_: any, progress: any) => callback(progress)
+      ipcRenderer.on('update:progress', subscription)
+      return () => ipcRenderer.removeListener('update:progress', subscription)
+    },
+    onDownloaded: (callback: (info: any) => void) => {
+      const subscription = (_: any, info: any) => callback(info)
+      ipcRenderer.on('update:downloaded', subscription)
+      return () => ipcRenderer.removeListener('update:downloaded', subscription)
+    },
+    onError: (callback: (error: any) => void) => {
+      const subscription = (_: any, error: any) => callback(error)
+      ipcRenderer.on('update:error', subscription)
+      return () => ipcRenderer.removeListener('update:error', subscription)
+    },
+  },
+
   // File operations
   files: {
     getAll: (limit?: number, offset?: number) => ipcRenderer.invoke('files:getAll', limit, offset),
@@ -16,9 +64,10 @@ contextBridge.exposeInMainWorld('electron', {
     update: (id: number, data: any) => ipcRenderer.invoke('files:update', id, data),
     delete: (id: number) => ipcRenderer.invoke('files:delete', id),
     bulkTag: (fileIds: number[], tagIds: number[]) => ipcRenderer.invoke('files:bulkTag', fileIds, tagIds),
+    sync: (files: any[]) => ipcRenderer.invoke('files:sync', files),
   },
 
-  // Tag operations (to be implemented)
+  // Tag operations
   tags: {
     getAll: () => ipcRenderer.invoke('tags:getAll'),
     create: (data: any) => ipcRenderer.invoke('tags:create', data),
@@ -29,8 +78,10 @@ contextBridge.exposeInMainWorld('electron', {
   // Collection operations
   collections: {
     getAll: () => ipcRenderer.invoke('collections:getAll'),
+    getById: (collectionId: number) => ipcRenderer.invoke('collections:getById', collectionId),
     create: (data: any) => ipcRenderer.invoke('collections:create', data),
-    getFiles: (collectionId: number) => ipcRenderer.invoke('collections:getFiles', collectionId),
+    update: (id: number, data: any) => ipcRenderer.invoke('collections:update', id, data),
+    delete: (id: number) => ipcRenderer.invoke('collections:delete', id),
     addFiles: (collectionId: number, fileIds: number[]) => ipcRenderer.invoke('collections:addFiles', collectionId, fileIds),
     removeFiles: (collectionId: number, fileIds: number[]) => ipcRenderer.invoke('collections:removeFiles', collectionId, fileIds),
   },
@@ -67,6 +118,34 @@ contextBridge.exposeInMainWorld('electron', {
   fl: {
     dragFile: (fileId: number) => ipcRenderer.invoke('fl:dragFile', fileId),
   },
+
+  // Cloud storage operations
+  cloud: {
+    selectFilesForUpload: () => ipcRenderer.invoke('cloud:selectFilesForUpload'),
+    uploadFiles: (filePaths: string[]) => ipcRenderer.invoke('cloud:uploadFiles', filePaths),
+    uploadFile: (filePath: string) => ipcRenderer.invoke('cloud:uploadFile', filePath),
+    getFiles: (page?: number, limit?: number) => ipcRenderer.invoke('cloud:getFiles', page, limit),
+    getFile: (id: number) => ipcRenderer.invoke('cloud:getFile', id),
+    deleteFile: (id: number) => ipcRenderer.invoke('cloud:deleteFile', id),
+    downloadFile: (id: number, originalFilename: string) =>
+      ipcRenderer.invoke('cloud:downloadFile', id, originalFilename),
+    shareFile: (id: number) => ipcRenderer.invoke('cloud:shareFile', id),
+    revokeShare: (id: number) => ipcRenderer.invoke('cloud:revokeShare', id),
+    getSharedWithMe: () => ipcRenderer.invoke('cloud:getSharedWithMe'),
+    getStorage: () => ipcRenderer.invoke('cloud:getStorage'),
+    copyShareLink: (shareUrl: string) => ipcRenderer.invoke('cloud:copyShareLink', shareUrl),
+    openShareLink: (shareUrl: string) => ipcRenderer.invoke('cloud:openShareLink', shareUrl),
+    onUploadProgress: (callback: (progress: any) => void) => {
+      const subscription = (_: any, progress: any) => callback(progress)
+      ipcRenderer.on('cloud:uploadProgress', subscription)
+      return () => ipcRenderer.removeListener('cloud:uploadProgress', subscription)
+    },
+    onDownloadProgress: (callback: (progress: any) => void) => {
+      const subscription = (_: any, progress: any) => callback(progress)
+      ipcRenderer.on('cloud:downloadProgress', subscription)
+      return () => ipcRenderer.removeListener('cloud:downloadProgress', subscription)
+    },
+  },
 })
 
 // TypeScript type definitions for window.electron
@@ -76,6 +155,26 @@ declare global {
       getVersion: () => Promise<string>
       getPlatform: () => Promise<string>
       ping: () => Promise<string>
+      auth: {
+        login: (email: string, password: string) => Promise<{ success: boolean; error?: string; data?: any }>
+        logout: () => Promise<{ success: boolean }>
+        verify: () => Promise<{ valid: boolean; hasSubscription: boolean; data?: any }>
+        getUser: () => Promise<{ user: any; subscription: any } | null>
+        hasSubscription: () => Promise<boolean>
+        openSubscribe: () => Promise<void>
+      }
+      updates: {
+        check: () => Promise<void>
+        checkManual: () => Promise<void>
+        download: () => Promise<void>
+        install: () => Promise<void>
+        onChecking: (callback: () => void) => () => void
+        onAvailable: (callback: (info: any) => void) => () => void
+        onNotAvailable: (callback: () => void) => () => void
+        onProgress: (callback: (progress: any) => void) => () => void
+        onDownloaded: (callback: (info: any) => void) => () => void
+        onError: (callback: (error: any) => void) => () => void
+      }
       files: {
         getAll: (limit?: number, offset?: number) => Promise<any[]>
         search: (query: string, filters: any) => Promise<any>
@@ -83,6 +182,7 @@ declare global {
         update: (id: number, data: any) => Promise<void>
         delete: (id: number) => Promise<void>
         bulkTag: (fileIds: number[], tagIds: number[]) => Promise<void>
+        sync: (files: any[]) => Promise<{ results: any[] }>
       }
       tags: {
         getAll: () => Promise<any[]>
@@ -92,8 +192,10 @@ declare global {
       }
       collections: {
         getAll: () => Promise<any[]>
+        getById: (collectionId: number) => Promise<any>
         create: (data: any) => Promise<any>
-        getFiles: (collectionId: number) => Promise<any[]>
+        update: (id: number, data: any) => Promise<void>
+        delete: (id: number) => Promise<void>
         addFiles: (collectionId: number, fileIds: number[]) => Promise<void>
         removeFiles: (collectionId: number, fileIds: number[]) => Promise<void>
       }
@@ -118,6 +220,45 @@ declare global {
       }
       fl: {
         dragFile: (fileId: number) => Promise<any>
+      }
+      cloud: {
+        selectFilesForUpload: () => Promise<string[] | null>
+        uploadFiles: (filePaths: string[]) => Promise<{
+          current: number
+          total: number
+          currentFile: any
+          completed: any[]
+          failed: { filename: string; error: string }[]
+        }>
+        uploadFile: (filePath: string) => Promise<{ success: boolean; file?: any; error?: string }>
+        getFiles: (page?: number, limit?: number) => Promise<{ files: any[]; pagination: any }>
+        getFile: (id: number) => Promise<any>
+        deleteFile: (id: number) => Promise<{ success: boolean }>
+        downloadFile: (id: number, originalFilename: string) => Promise<{
+          success: boolean
+          canceled?: boolean
+          error?: string
+        }>
+        shareFile: (id: number) => Promise<{
+          share_token: string
+          share_url: string
+          is_public: boolean
+        }>
+        revokeShare: (id: number) => Promise<{ success: boolean }>
+        getSharedWithMe: () => Promise<any[]>
+        getStorage: () => Promise<{
+          used_bytes: number
+          used_formatted: string
+          file_count: number
+          quota_bytes: number
+          quota_formatted: string
+          quota_unlimited: boolean
+          usage_percent: number
+        }>
+        copyShareLink: (shareUrl: string) => Promise<{ success: boolean }>
+        openShareLink: (shareUrl: string) => Promise<{ success: boolean }>
+        onUploadProgress: (callback: (progress: any) => void) => () => void
+        onDownloadProgress: (callback: (progress: any) => void) => () => void
       }
     }
   }

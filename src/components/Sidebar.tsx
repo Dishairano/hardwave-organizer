@@ -1,24 +1,55 @@
-import { Home, Star, Clock, Folder, Plus } from 'lucide-react'
+import { Home, Star, Clock, Folder, Plus, Music, FileAudio } from 'lucide-react'
 import { Tag } from './Tag'
 import { Button } from './Button'
+
+type ViewType = 'all' | 'samples' | 'projects' | 'favorites' | 'recent'
 
 interface SidebarProps {
   collections: Array<{ id: number; name: string; color?: string; file_count?: number }>
   tags: Array<{ id: number; name: string; color?: string }>
+  currentView: ViewType
+  selectedCollectionId?: number | null
+  selectedTagId?: number | null
+  onViewChange: (view: ViewType) => void
   onAddFolder: () => void
   onCollectionClick?: (id: number) => void
   onTagClick?: (id: number) => void
+  onCreateCollection?: () => void
+  onManageTags?: () => void
+  onBackToHub?: () => void
 }
 
 export function Sidebar({
   collections,
   tags,
+  currentView,
+  selectedCollectionId,
+  selectedTagId,
+  onViewChange,
   onAddFolder,
   onCollectionClick,
   onTagClick,
+  onCreateCollection,
+  onManageTags,
+  onBackToHub,
 }: SidebarProps) {
   return (
     <div className="w-60 bg-bg-secondary border-r border-bg-hover flex flex-col h-full">
+      {/* Back to Hub */}
+      {onBackToHub && (
+        <div className="p-4 border-b border-bg-hover">
+          <button
+            onClick={onBackToHub}
+            className="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium text-text-secondary hover:bg-bg-hover hover:text-text-primary transition-all"
+          >
+            <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-4 0a1 1 0 01-1-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 01-1 1m-2 0h2" />
+            </svg>
+            Back to Hub
+          </button>
+        </div>
+      )}
+
       {/* Top Navigation */}
       <div className="p-4 border-b border-bg-hover">
         <Button
@@ -34,9 +65,11 @@ export function Sidebar({
       {/* Quick Links */}
       <div className="p-4 border-b border-bg-hover">
         <nav className="space-y-1">
-          <NavItem icon={<Home size={18} />} label="Library" active />
-          <NavItem icon={<Star size={18} />} label="Favorites" />
-          <NavItem icon={<Clock size={18} />} label="Recent" />
+          <NavItem icon={<Home size={18} />} label="All Files" active={currentView === 'all'} onClick={() => onViewChange('all')} />
+          <NavItem icon={<FileAudio size={18} />} label="Samples" active={currentView === 'samples'} onClick={() => onViewChange('samples')} />
+          <NavItem icon={<Music size={18} />} label="Projects" active={currentView === 'projects'} onClick={() => onViewChange('projects')} />
+          <NavItem icon={<Star size={18} />} label="Favorites" active={currentView === 'favorites'} onClick={() => onViewChange('favorites')} />
+          <NavItem icon={<Clock size={18} />} label="Recent" active={currentView === 'recent'} onClick={() => onViewChange('recent')} />
         </nav>
       </div>
 
@@ -46,7 +79,11 @@ export function Sidebar({
           <h3 className="text-sm font-semibold text-text-secondary uppercase tracking-wide">
             Collections
           </h3>
-          <button className="text-text-tertiary hover:text-accent-primary transition-colors">
+          <button
+            className="text-text-tertiary hover:text-accent-primary transition-colors"
+            onClick={onCreateCollection}
+            title="Create collection"
+          >
             <Plus size={14} />
           </button>
         </div>
@@ -61,6 +98,7 @@ export function Sidebar({
                 name={collection.name}
                 count={collection.file_count || 0}
                 color={collection.color}
+                active={selectedCollectionId === collection.id}
                 onClick={() => onCollectionClick?.(collection.id)}
               />
             ))}
@@ -74,7 +112,10 @@ export function Sidebar({
           <h3 className="text-sm font-semibold text-text-secondary uppercase tracking-wide">
             Tags
           </h3>
-          <button className="text-text-tertiary hover:text-accent-primary transition-colors">
+          <button
+            className="text-xs text-text-tertiary hover:text-accent-primary transition-colors"
+            onClick={onManageTags}
+          >
             Manage
           </button>
         </div>
@@ -84,14 +125,18 @@ export function Sidebar({
         ) : (
           <div className="flex flex-wrap gap-1.5">
             {tags.slice(0, 20).map((tag) => (
-              <Tag
+              <div
                 key={tag.id}
-                color={tag.color}
-                size="xs"
-                onClick={() => onTagClick?.(tag.id)}
+                className={selectedTagId === tag.id ? 'ring-2 ring-accent-primary ring-offset-1 ring-offset-bg-secondary rounded' : ''}
               >
-                {tag.name}
-              </Tag>
+                <Tag
+                  color={tag.color}
+                  size="xs"
+                  onClick={() => onTagClick?.(tag.id)}
+                >
+                  {tag.name}
+                </Tag>
+              </div>
             ))}
             {tags.length > 20 && (
               <button className="text-xs text-accent-primary hover:underline">
@@ -125,13 +170,16 @@ function NavItem({
   icon,
   label,
   active = false,
+  onClick,
 }: {
   icon: React.ReactNode
   label: string
   active?: boolean
+  onClick?: () => void
 }) {
   return (
     <button
+      onClick={onClick}
       className={`
         w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium
         transition-all
@@ -152,25 +200,29 @@ function CollectionItem({
   name,
   count,
   color,
+  active,
   onClick,
 }: {
   name: string
   count: number
   color?: string
+  active?: boolean
   onClick?: () => void
 }) {
   return (
     <button
-      className="w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm hover:bg-bg-hover transition-colors group"
+      className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm transition-colors group ${
+        active ? 'bg-bg-hover' : 'hover:bg-bg-hover'
+      }`}
       onClick={onClick}
     >
       <div className="flex items-center gap-2">
         <Folder
           size={16}
-          className="text-text-tertiary group-hover:text-accent-primary transition-colors"
-          style={{ color: color }}
+          className={active ? 'text-accent-primary' : 'text-text-tertiary group-hover:text-accent-primary transition-colors'}
+          style={{ color: active ? undefined : color }}
         />
-        <span className="text-text-primary">{name}</span>
+        <span className={active ? 'text-accent-primary font-medium' : 'text-text-primary'}>{name}</span>
       </div>
       <span className="text-xs text-text-tertiary">{count}</span>
     </button>

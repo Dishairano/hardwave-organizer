@@ -45,3 +45,12 @@
   outline: 2px solid #FF00FF;
   outline-offset: 2px;
 }
+
+/* Window drag region */
+.drag {
+  -webkit-app-region: drag;
+}
+
+.no-drag {
+  -webkit-app-region: no-drag;
+}
